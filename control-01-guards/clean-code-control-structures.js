@@ -60,12 +60,9 @@ function isEmpty(transactions){
     return !transactions || transactions === 0
 }
 
-function showErrorMessage(message,item){
+function showErrorMessage(message,item = {}){
     console.log(message);
-
-    if(item){
-        console.log(item);
-    }
+    console.log(item);
 }
 
 function processTransaction(transaction){
