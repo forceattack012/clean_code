@@ -71,24 +71,43 @@ function showErrorMessage(message,item){
 function processTransaction(transaction){
     try{
         validateTransaction(transaction);
-
-        processByMethod(transaction);
+        processWithProcessor(transaction);
     }
     catch(error){
         showErrorMessage(error.message,error.item);
     }
-
 }
 
-function processByMethod(transaction){
-    if(usesTransactionMethod(transaction,'CREDIT_CARD')){
-        processCreditCardTransaction(transaction);
-    } else if(usesTransactionMethod(transaction, 'PAYPAL')){
-        processPaypalTransaction(transaction);
-    } else if(usesTransactionMethod(transaction,'PLAN')){
-        processPlanTransaction(transaction);
+function processWithProcessor(transaction){
+    const processors = getTransactionProcessors(transaction);
+
+    if(isPayment(transaction)){
+        processors.processPayment(transaction);
+    }
+    else {
+        processors.processRefund(transaction);
     }
 }
+
+function getTransactionProcessors(transaction){
+    let processors = {
+        processPayment: null,
+        processRefund: null
+    };
+    if(usesTransactionMethod(transaction,'CREDIT_CARD')){
+        processors.processPayment = processCreditCardPayment;
+        processors.processRefund = processCreditCardRefund;
+    } else if(usesTransactionMethod(transaction, 'PAYPAL')){
+        processors.processPayment = processPayPalPayment
+        processors.processRefund = processPayPalRefund
+    } else if(usesTransactionMethod(transaction,'PLAN')){
+        processors.processPayment = processPlanPayment
+        processors.processRefund = processPlanRefund
+    }
+
+    return processors;
+}
+
 
 function validateTransaction(transaction){
     if(!isOpen(transaction)) {
@@ -119,37 +138,6 @@ function isRefund(transaction){
 function usesTransactionMethod(transaction,method){
     return transaction.method === method;
 }
-
-function processCreditCardTransaction(transaction){
-    if(isPayment(transaction)){
-        processCreditCardPayment();
-    }
-    else if(isRefund(transaction)){
-        processCreditCardRefund();
-    }
-}
-
-function processPaypalTransaction(transaction){
-    if(isPayment(transaction)){
-        processPaypalPayment();
-    }
-    else if(isRefund(transaction)){
-        processPaypalRefund();
-    }
-
-}
-
-function processPlanTransaction(transaction){
-    if(isPayment(transaction)){
-        processPaypalPayment();
-    }
-    else if(isRefund(transaction)){
-        processPaypalRefund();
-    }
-
-}
-
-
 
 function processCreditCardPayment(transaction) {
     console.log(
